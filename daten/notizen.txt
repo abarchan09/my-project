@@ -1,0 +1,8 @@
+Wärmebedarf in der Fh (2025)
+MAX= 879 kW
+MEAN= 174.75 kW
+Energie= 1.53 GWh
+
+Wetter 2024
+cop 2024
+pv linie 2024
