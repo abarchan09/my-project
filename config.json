@@ -1,41 +1,32 @@
 
 
 {
-    "heat pump":{
+    "luft_hp":{
+        "Bezeichnung":"beispiel",
         "enabled":true,
-        "nominal_value":"800 kW_th",
-        "fixed_costs":"reperatur",
-        "cop":"cop_t",
-        "capex_spezifisch":"900 €/kW_th",
-        "capex":"",
-        "opex_rate":"2%",
-        "opex":"",
-        "lebensdauer":"15",
-        "zinsen":"3 %",
-        "realer bedingung":{
-            "Investment":{
-                "maximum_kw":1000 ,
-                "minimum":"200 kW",
-                "ep_costs":"capex_spezifisch",
-                "lifetime":"lebensdauer"
-                                         }}},
+        "nominal_value":150,
+        "cop":"A7/W35",
+        "verlauftemp":70,
+        "capex_spezifisch":1500,
+        "capex":20000,
+        "Kältemittel":"R744",
+        "opex":"stromkosten",
+        "lebensdauer":18,
+        "zinsen":"3 %"
+        },
 
-  "pv":{
-    "enabled":true,
-    "nominal_value":500,
-    "fix":"pv_profil", 
-    "fixed_costs":"reperatur",   
-    "capex":"nominal_value*capex_spezifisch",
-    "sp_capex":900 ,
-    "opex":"capex*opex_rate",
-    "opex_rate":"0.015",
-    "zinsen":"5 %",
-    "lifetime":25,
-       "Investment":{
-       "maximum":"1000 kW",
-        "minimum":"200 kW",
-        "ep_costs":"capex_spezifisch",
-        "lifetime":25}},
-    "grid":{
-        "enabled": false}
+  "sol_hp":{
+    "Bezeichnung":"Firma",
+        "enabled":false,
+        "nominal_value":15,
+        "cop":"A7/W35",
+        "verlauftemp":70,
+        "capex_spezifisch":1500,
+        "capex":20000,
+        "Kältemittel":"R744",
+        "opex":"stromkosten",
+        "lebensdauer":18,
+        "zinsen":"3 %"
+        }
 }
+    

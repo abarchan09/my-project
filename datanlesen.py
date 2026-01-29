@@ -12,7 +12,7 @@ def load_input_data():
        cop abhängig von außentemp
        """
     df = pd.read_csv(
-        DATA_DIR / "input_data.csv",
+        DATA_DIR / "data.csv",
         index_col=0,
         parse_dates=True
     )

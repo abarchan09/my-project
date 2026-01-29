@@ -2,26 +2,19 @@ from oemof import solph
 
 
 
-def add_heat_demand(es, heat_bus, input_data):
+def add_heat_demand(es, heat_bus, data):
+    
   
-   
-    
-   
 
 
-    
-    peak= input_data["heat_demand_kw"].max()
-
-    
-
-    demand = solph.components.Sink(
+     demand = solph.components.Sink(
         label="last",
         inputs={
             heat_bus: solph.flows.Flow(
-                nominal_value=peak,
-                fix=input_data["heat_demand_kw"]/peak,
+                nominal_value=data["heat_demand_kw"].max(),
+                fix=data["heat_demand_kw"]/data["heat_demand_kw"].max(),
             )
         }
     )
-    es.add(demand)
-    return demand
+     es.add(demand)
+     return demand
