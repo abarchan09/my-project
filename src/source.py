@@ -3,7 +3,7 @@ from oemof import solph
 
 
 
-def add_pv(es, el_bus, data):
+def add_pv(es, el_bus, df):
     """
     keine Kosten werden entstanden
     wenn enabled True ist, dann wird an modell addiert.
@@ -15,8 +15,8 @@ def add_pv(es, el_bus, data):
         label="pv_dach",
         outputs={
             el_bus: solph.flows.Flow(
-                nominal_value=data["pv_power_kw"].max(),
-                fix= data["pv_power_kw"]/data["pv_power_kw"].max(),
+                nominal_value=df["pv_power_kw"].max(),
+                fix= df["pv_power_kw"]/df["pv_power_kw"].max(),
                 
                 
             )
@@ -24,9 +24,9 @@ def add_pv(es, el_bus, data):
     )
 
     es.add(pv)
-    return pv
+    
 
-def add_grid(es, el_bus,data):
+def add_grid(es, el_bus,df):
     """strom preis aus dem  data
        export von strom bis Abdeckung der Last"""
     
@@ -35,13 +35,25 @@ def add_grid(es, el_bus,data):
         label="el_grid",
         outputs={
             el_bus: solph.flows.Flow(
-                variable_costs= data["el_price_eur_kwh"],
+                variable_costs= df["el_price_eur_kwh"],
                 
             )
         }
     )
 
     es.add(grid)
-    return grid
 
+def add_heat_source(es,b_heat_bus):
+    air= solph.components.Source(label="heat_source",
+                                  outputs={b_heat_bus: solph.flows.Flow()})
+    es.add(air)
+    
+
+def add_backup_heat(es,heat_bus):
+    backup_heat= solph.components.Source(
+    label="backup_heat",
+    outputs={heat_bus: solph.flows.Flow(variable_costs=1e6)})
+
+
+    es.add(backup_heat)
 
