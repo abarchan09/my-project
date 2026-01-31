@@ -3,6 +3,7 @@ from oemof import solph
 
 
 
+
 def add_pv(es, el_bus, df):
     """
     keine Kosten werden entstanden
@@ -15,9 +16,8 @@ def add_pv(es, el_bus, df):
         label="pv_dach",
         outputs={
             el_bus: solph.flows.Flow(
-                nominal_value=df["pv_power_kw"].max(),
-                fix= df["pv_power_kw"]/df["pv_power_kw"].max(),
-                
+                nominal_value=df["PV_kw"].max(),
+                fix= df["PV_kw"]/df["PV_kw"].max(),
                 
             )
         }
@@ -35,7 +35,10 @@ def add_grid(es, el_bus,df):
         label="el_grid",
         outputs={
             el_bus: solph.flows.Flow(
-                variable_costs= df["el_price_eur_kwh"],
+                nominal_capacity=1200,
+                variable_costs= df["el_price_eur_kwh"]+0.08,
+                max=0.8
+                
                 
             )
         }
@@ -52,7 +55,7 @@ def add_heat_source(es,b_heat_bus):
 def add_backup_heat(es,heat_bus):
     backup_heat= solph.components.Source(
     label="backup_heat",
-    outputs={heat_bus: solph.flows.Flow(variable_costs=1e6)})
+    outputs={heat_bus: solph.flows.Flow(variable_costs=0)})
 
 
     es.add(backup_heat)

@@ -1,3 +1,4 @@
 Investment kann Annuität intern berechnen
 Investment Flow ist Investment an einem Flow gebunden 
 jede components ist als funktion defeniert
+variable costs strompreis problem

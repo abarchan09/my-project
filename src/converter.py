@@ -3,7 +3,7 @@ import oemof.solph as solph
 
 
 
-def add_heat_pump(es,el_bus,heat_bus,b_heat_bus,df,cfg):
+def add_heat_pump(es,el_bus,heat_bus,b_heat_bus,cfg):
     """
     COP als zeitrehe und von Temperatur abhängig,
     Änfingliche Investitionkosten
@@ -22,8 +22,8 @@ def add_heat_pump(es,el_bus,heat_bus,b_heat_bus,df,cfg):
             nominal_value=cfg["luft_hp"]["nominal_value"],
             )},
         conversion_factors={
-            el_bus: 1/df["cop_t"],
-            b_heat_bus: (df["cop_t"]-1)/df["cop_t"],  
+            el_bus: 1/3,
+            b_heat_bus: (3-1)/3,  
         },
     )
 

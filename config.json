@@ -4,7 +4,7 @@
     "luft_hp":{
         "Bezeichnung":"beispiel",
         "enabled":true,
-        "nominal_value":800,
+        "nominal_value":12000,
         "cop":"A7/W35",
         "verlauftemp":70,
         "capex_spezifisch":1500,
