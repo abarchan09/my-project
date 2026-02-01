@@ -4,3 +4,4 @@
 # erste Modellierung des System erfolgreich abgschlossen
 # cbc solver funktioniert
 # model infeasible
+# probleme strom preis beheben 0.08
