@@ -9,6 +9,9 @@ from src.sink import add_heat_demand,add_export,add_heat_dump
 from src.converter import add_heat_pump
 from config import load_config
 from src.solver import solverin
+from analysis.wirtschaft import calc_opex_lcoh
+from analysis.ploten import plot_pv_grid_heatdemand
+
 import pandas as pd
 
 
@@ -26,7 +29,7 @@ def bauen():
 
     print("3)  Busse")
     el_bus = solph.Bus(label="strom")
-    heat_bus = solph.Bus(label="wearme")
+    heat_bus = solph.Bus(label="waerme")
     b_heat_bus= solph.Bus(label="abwaerme")
     es.add(el_bus,heat_bus,b_heat_bus )    
 
@@ -40,7 +43,7 @@ def bauen():
     cfg = load_config() 
     print("6) Sink: Heat demand, Export ")
     add_heat_demand(es,heat_bus,df)
-    add_export(es,el_bus)
+    add_export(es,el_bus,df)
     add_heat_dump(es,heat_bus)
 
     print("7) Heat pump ")
@@ -49,21 +52,21 @@ def bauen():
     
 
     print("✅ Build erfolgreich ")
-    return es
+    return es,df,cfg
 
 if __name__ == "__main__":
-    es = bauen()
+    es,df,cfg = bauen()
     model,results= solverin(es)
     
     
 
     if results is None:
-        print("❌ Keine Results vorhanden (Modell nicht optimal / infeasible)")
+        print("❌ Modell infeasible")
     else:
-        strom_bus_results = views.node(results, "strom")["sequences"]
-        
-        print(strom_bus_results.head())
-    
+        plot_pv_grid_heatdemand(results)
 
-
+        opex, e_menge, lcoh_value = calc_opex_lcoh(results, df, cfg)
+        print(f"OPEX: {opex:,.0f} €")
+        print(f"Wärmemenge: {e_menge/1000:.1f} MWh")
+        print(f"LCOH: {lcoh_value:.2f} €/kWh")
     

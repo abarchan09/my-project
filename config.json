@@ -12,7 +12,7 @@
         "Kältemittel":"R744",
         "opex":"stromkosten",
         "lebensdauer":18,
-        "zinsen":"3 %"
+        "zinsen":0.03
         },
 
   "sol_hp":{

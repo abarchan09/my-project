@@ -8,5 +8,9 @@ MAX= 174.0 kW
 MEAN= 26.57 kW
 Energie= 0.23 GWh
 
-Wetter 2024
-cop 2024
+netz = 0.08 euro/kwh
+
+erste results:
+OPEX: 61,391 €
+Wärmemenge: 1530.7 MWh
+LCOH: 802.11 €/kWh

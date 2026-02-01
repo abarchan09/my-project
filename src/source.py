@@ -16,7 +16,7 @@ def add_pv(es, el_bus, df):
         label="pv_dach",
         outputs={
             el_bus: solph.flows.Flow(
-                nominal_value=df["PV_kw"].max(),
+                nominal_capacity=df["PV_kw"].max(),
                 fix= df["PV_kw"]/df["PV_kw"].max(),
                 
             )
@@ -35,9 +35,11 @@ def add_grid(es, el_bus,df):
         label="el_grid",
         outputs={
             el_bus: solph.flows.Flow(
-                nominal_capacity=1200,
+                nominal_capacity=500,
+                
                 variable_costs= df["el_price_eur_kwh"]+0.08,
-                max=0.8
+                
+                
                 
                 
             )

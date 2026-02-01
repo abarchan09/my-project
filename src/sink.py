@@ -21,14 +21,14 @@ def add_heat_demand(es, heat_bus, df):
     )
     es.add(demand)
     
-def add_export(es,el_bus):
+def add_export(es,el_bus,df):
 
 
    export = solph.components.Sink(
      label="export_to_grid",
      inputs={
         el_bus: solph.Flow(
-            variable_costs=-0.05 
+            variable_costs=-(df["el_price_eur_kwh"]+0.08)
             )
      }
   )
