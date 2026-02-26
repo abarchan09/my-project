@@ -35,13 +35,9 @@ def add_grid(es, el_bus,df):
         label="el_grid",
         outputs={
             el_bus: solph.flows.Flow(
-                nominal_capacity=500,
                 
-                variable_costs= df["el_price_eur_kwh"]+0.08,
-                
-                
-                
-                
+                variable_costs= df["el_price_eur_kwh"],
+                 
             )
         }
     )
@@ -49,16 +45,18 @@ def add_grid(es, el_bus,df):
     es.add(grid)
 
 def add_heat_source(es,b_heat_bus):
-    air= solph.components.Source(label="heat_source",
+    umwelt= solph.components.Source(label="heat_source",
                                   outputs={b_heat_bus: solph.flows.Flow()})
-    es.add(air)
+    es.add(umwelt)
     
 
-def add_backup_heat(es,heat_bus):
-    backup_heat= solph.components.Source(
-    label="backup_heat",
-    outputs={heat_bus: solph.flows.Flow(variable_costs=0)})
 
 
-    es.add(backup_heat)
+def add_gas_source(es,gas_bus,df):
+    gas= solph.components.Source(label="gas_grid",
+                                 outputs={gas_bus:solph.flows.Flow(
+                                     variable_costs=0.3,
+                                     
+                                     )})
+    es.add(gas)
 

@@ -1,33 +1,42 @@
-from oemof.solph import views
+from .help import lcoh
+import pandas as pd
 
-
-
-def calc_opex_lcoh(results, df, cfg):
-    # Strombus
-    strom_bus = views.node(results, "strom")["sequences"]
-
-    # Netzimport (exakter Key aus deiner Ausgabe)
-    grid_import = strom_bus[(("el_grid", "strom"), "flow")]
+def calc_opex_lcoh(output_data, df, cfg):
+    """
+    data: dict aus extract_result_series(results)
+    df: deine Input-Zeitreihe (el_price_eur_kwh, heat_demand_kw, ...)
+    """
     
-    #Netz_export
+    grid_import = output_data["grid_import_el"]
+    gas_import  = output_data["gas_import"]
+    grid_export = output_data["grid_export_el"]
+    cap_hp      = output_data["cap_heat_pump_invest"]  # investierte kW (oder kW_th)
+    # ------------------ Prüfen --------------
+    
 
-    grid_export= strom_bus[(("strom","export_to_grid"),"flow")]
+    price = df["el_price_eur_kwh"]  # laut dir keine NaN
 
 
-    # OPEX [€]
-    opex = (grid_import * (df["el_price_eur_kwh"] + 0.08)).sum()-(grid_export*(df["el_price_eur_kwh"] + 0.08)).sum()
+    # WICHTIG: auf grid_import Index bringen
+    opex_tech = (grid_import * price).sum()
+    
+    
+        
+   
 
-    # Wärmemenge [kWh] → falls df stündlich
-    e_menge_kwh = df["heat_demand_kw"].sum()
+    # CAPEX [€]
+    capex = cfg["sol_hp"]["capex_spezifisch"] * cap_hp
 
-    from .help import lcoh
+    # Wärmemenge [kWh] (wenn df stündlich und heat_demand_kw in kW)
+    w_menge = output_data["hp_heat"].sum()
+
     lcoh_value = lcoh(
-        opex,
-        cfg["luft_hp"]["capex"],
-        cfg["luft_hp"]["lebensdauer"],
-        cfg["luft_hp"]["zinsen"],
-        e_menge_kwh,
+        opex_tech,
+        0.02,
+        20,
+        capex,
+        w_menge,
     )
 
-    return opex, e_menge_kwh, lcoh_value
+    return opex_tech, capex, w_menge, lcoh_value
 

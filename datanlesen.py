@@ -10,6 +10,7 @@ def load_input_data():
                       index_col=0,
                       parse_dates=True
                       )
+   
     
     return df
 

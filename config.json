@@ -2,31 +2,32 @@
 
 {
     "luft_hp":{
-        "Bezeichnung":"beispiel",
+        "Bezeichnung":"luft_200 kW, " ,
         "enabled":true,
-        "nominal_value":12000,
-        "cop":"A7/W35",
-        "verlauftemp":70,
-        "capex_spezifisch":1500,
-        "capex":20000,
-        "Kältemittel":"R744",
+        "nominal_value":200,
+        "cop":"A/W55",
+        "verlauftemp":55,
+        "capex_spezifisch":1600,
+        "capex":"",
+        "Kältemittel":"None",
         "opex":"stromkosten",
-        "lebensdauer":18,
-        "zinsen":0.03
+        "lebensdauer":20,
+        "zinsen":0.05
         },
 
   "sol_hp":{
-    "Bezeichnung":"Firma",
+    "Bezeichnung":"240 kW",
         "enabled":false,
-        "nominal_value":15,
+        "nominal_value":200,
         "cop":"A7/W35",
-        "verlauftemp":70,
-        "capex_spezifisch":1500,
-        "capex":20000,
-        "Kältemittel":"R744",
+        "verlauftemp":55,
+        "capex_spezifisch":3600,
+        "capex_m":100, 
+        "capex":3966000,
+        "Kältemittel":"None",
         "opex":"stromkosten",
-        "lebensdauer":18,
-        "zinsen":"3 %"
+        "lebensdauer":20,
+        "zinsen":0.05
         }
 }
     

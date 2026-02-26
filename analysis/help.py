@@ -1,7 +1,7 @@
 
 
 
-def lcoh(capex,i,n,opex,e_menge):
+def lcoh(opex,i,n,capex,e_menge):
       """
     Berechnet die Levelized Cost of heat (LCOh).
 
