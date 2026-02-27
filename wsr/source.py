@@ -1,10 +1,9 @@
 from oemof import solph
 
-def add_solar_thermie(es,b_heat_bus):
+def add_solar_thermie(es,sol_bus,df_sl):
         st= solph.components.Source(label="solar_thermie",
-                                     outputs={b_heat_bus:solph.flows.Flow(
-                                             nominal_capacity=0,
-                                             fix=0,
+                                     outputs={sol_bus:solph.flows.Flow(
+                                             nominal_capacity=df_sl["solar_th_kw"]
                                      )},
                                      )
         es.add(st)

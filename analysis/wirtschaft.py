@@ -25,7 +25,8 @@ def calc_opex_lcoh(output_data, df, cfg):
    
 
     # CAPEX [€]
-    capex = cfg["sol_hp"]["capex_spezifisch"] * cap_hp
+    
+    capex =cfg ["luft_hp"]["capex_spezifisch"]*cap_hp
 
     # Wärmemenge [kWh] (wenn df stündlich und heat_demand_kw in kW)
     w_menge = output_data["hp_heat"].sum()

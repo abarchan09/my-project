@@ -1,6 +1,3 @@
-
-
-
 def lcoh(opex,i,n,capex,e_menge):
       """
     Berechnet die Levelized Cost of heat (LCOh).
@@ -20,4 +17,6 @@ def lcoh(opex,i,n,capex,e_menge):
         a_capex = capex * af
 
       return (a_capex+ opex) / e_menge
+
+
 

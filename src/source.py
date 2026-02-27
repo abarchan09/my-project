@@ -55,8 +55,19 @@ def add_heat_source(es,b_heat_bus):
 def add_gas_source(es,gas_bus,df):
     gas= solph.components.Source(label="gas_grid",
                                  outputs={gas_bus:solph.flows.Flow(
-                                     variable_costs=0.3,
+                                     variable_costs=df["gas_price"],
                                      
                                      )})
     es.add(gas)
 
+#---------------------------------------------------------------------#
+#-------- Wasser solarthermie------------------#
+
+def add_solar_thermie(es,sol_bus):
+        st= solph.components.Source(label="solar_thermie",
+                                     outputs={sol_bus:solph.flows.Flow(
+                                             nominal_capacity=0,
+                                             fix=0,
+                                     )},
+                                     )
+        es.add(st)

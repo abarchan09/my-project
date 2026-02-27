@@ -2,32 +2,46 @@
 
 {
     "luft_hp":{
-        "Bezeichnung":"luft_200 kW, " ,
-        "enabled":true,
+        "enabled":false,
         "nominal_value":200,
         "cop":"A/W55",
         "verlauftemp":55,
         "capex_spezifisch":1600,
-        "capex":"",
-        "Kältemittel":"None",
-        "opex":"stromkosten",
-        "lebensdauer":20,
-        "zinsen":0.05
+        "ep":128,
+        "maximum_kW":200,
+        "minimum_kW":50,
+        "lifetime":20,
+        "wacc":0.05
         },
 
   "sol_hp":{
-    "Bezeichnung":"240 kW",
-        "enabled":false,
+        "enabled":true,
         "nominal_value":200,
         "cop":"A7/W35",
         "verlauftemp":55,
         "capex_spezifisch":3600,
-        "capex_m":100, 
-        "capex":3966000,
-        "Kältemittel":"None",
-        "opex":"stromkosten",
-        "lebensdauer":20,
-        "zinsen":0.05
-        }
+        "ep":295,
+        "maximum_kW":200,
+        "minimum_kW":50,
+        "lifetime":20,
+        "wacc":0.05
+        },
+    "wasser_hp":{
+        "enabled":true,
+        "nominal_value":200,
+        "cop":"A7/W35",
+        "verlauftemp":55,
+        "capex_spezifisch":1600,
+        "ep":0,
+        "maximum_kW":200,
+        "minimum_kW":50,
+        "lifetime":20,
+        "wacc":0.05
+        },
+    "solarthremie":{
+        "fläche":500,
+        "capex_spezifisch_m²":500,
+        "capex":250000
+    }
 }
     
