@@ -1,7 +1,9 @@
 from .help import lcoh
 import pandas as pd
 
-def calc_opex_lcoh(output_data, df, cfg):
+
+
+def calc_opex_lcoh(output_data, df):
     """
     data: dict aus extract_result_series(results)
     df: deine Input-Zeitreihe (el_price_eur_kwh, heat_demand_kw, ...)
@@ -10,7 +12,7 @@ def calc_opex_lcoh(output_data, df, cfg):
     grid_import = output_data["grid_import_el"]
     gas_import  = output_data["gas_import"]
     grid_export = output_data["grid_export_el"]
-    cap_hp      = output_data["cap_heat_pump_invest"]  # investierte kW (oder kW_th)
+    cap_hp      = output_data["cap_heat_pump_invest_kw"]  # investierte kW (oder kW_th)
     # ------------------ Prüfen --------------
     
 
@@ -24,9 +26,10 @@ def calc_opex_lcoh(output_data, df, cfg):
         
    
 
-    # CAPEX [€]
+    # CAPEX [€/kW] 
+    capex_spec=1070
+    capex_total=cap_hp * capex_spec
     
-    capex =cfg ["luft_hp"]["capex_spezifisch"]*cap_hp
 
     # Wärmemenge [kWh] (wenn df stündlich und heat_demand_kw in kW)
     w_menge = output_data["hp_heat"].sum()
@@ -35,9 +38,9 @@ def calc_opex_lcoh(output_data, df, cfg):
         opex_tech,
         0.02,
         20,
-        capex,
+        capex_total,
         w_menge,
     )
 
-    return opex_tech, capex, w_menge, lcoh_value
+    return opex_tech,  w_menge, lcoh_value
 

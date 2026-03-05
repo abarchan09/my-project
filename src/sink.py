@@ -24,7 +24,7 @@ def add_export(es,el_bus,df):
    export = solph.components.Sink(
      label="export_to_grid",
      inputs={
-        el_bus: solph.Flow(
+        el_bus: solph.flows.Flow(
             variable_costs=-(df["el_price_eur_kwh"])
             )
      }

@@ -5,13 +5,8 @@ from oemof import solph
 
 
 def add_pv(es, el_bus, df):
-    """
-    keine Kosten werden entstanden
-    wenn enabled True ist, dann wird an modell addiert.
-       """
     
     
-
     pv = solph.components.Source(
         label="pv_dach",
         outputs={
@@ -27,10 +22,8 @@ def add_pv(es, el_bus, df):
     
 
 def add_grid(es, el_bus,df):
-    """strom preis aus dem  data
-       export von strom bis Abdeckung der Last"""
     
-
+    
     grid = solph.components.Source(
         label="el_grid",
         outputs={
@@ -63,11 +56,23 @@ def add_gas_source(es,gas_bus,df):
 #---------------------------------------------------------------------#
 #-------- Wasser solarthermie------------------#
 
-def add_solar_thermie(es,sol_bus):
+def add_solar_thermie(es,sol_bus,df):
+
         st= solph.components.Source(label="solar_thermie",
-                                     outputs={sol_bus:solph.flows.Flow(
-                                             nominal_capacity=0,
-                                             fix=0,
-                                     )},
+                                outputs={sol_bus:solph.flows.Flow(
+                                             nominal_capacity=solph.Investment(
+                                                  ep_costs=70
+                                             ),       
+                                             fix=df["solar_q_Wm2"],)
+                                             
+                                     
+                                     }
                                      )
         es.add(st)
+
+def add_water_source(es, water_bus):
+    wt = solph.components.Source(
+        label="water_source",
+        outputs={water_bus: solph.flows.Flow(variable_costs=0.0)}
+    )
+    es.add(wt)

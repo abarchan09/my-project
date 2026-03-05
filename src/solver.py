@@ -10,8 +10,11 @@ def solverin(es, solver="cbc"):
         return model, None
 
     results = solph.processing.results(model)
+    meta    = solph.processing.meta_results(model)
+
+
     print("✅ Optimal gelöst")
-    return model, results
+    return model, results, meta
 
 
 

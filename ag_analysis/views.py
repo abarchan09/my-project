@@ -9,11 +9,11 @@ def extract_result_series(results) -> dict[str, pd.Series]:
     """
 
     el_seq     = views.node(results, "strom")["sequences"]
-    heat_seq   = views.node(results, "waerme")["sequences"]
-    #heat_base_seq=views.node(results, "heat_base_bus")["sequences"]
-    #heat_peak_seq= views.node(results,"heat_peak_bus")["sequences"]
+    heat     = views.node(results, "waerme")
+    heat_seq = heat["sequences"]
     source_seq = views.node(results, "abwaerme")["sequences"]
     gas_seq    = views.node(results, "gas")["sequences"]
+   
 
     # Invest steht bei dir in 'waerme' -> scalars
     heat_scalars = views.node(results, "waerme")["scalars"]
@@ -31,13 +31,31 @@ def extract_result_series(results) -> dict[str, pd.Series]:
         "hp_heat":     heat_seq[(("heat_pump", "waerme"), "flow")],
         "boiler_heat": heat_seq[(("gas_boiler", "waerme"), "flow")],
         "heat_demand": heat_seq[(("waerme", "last"), "flow")],
+       
+       
 
         # Quelle für HP
         "heat_source": source_seq[(("abwaerme", "heat_pump"), "flow")],
 
-        # Invest (Skalar)
-        "cap_heat_pump_invest": heat_scalars[(("heat_pump", "waerme"), "invest")],
+        
+        
+
     }
+    if "scalars" in heat:
+        heat_scalars = heat["scalars"]
+
+        # je nach solph-Version kann der Key leicht variieren
+        invest_key = ((("heat_pump", "waerme"), "invest"))
+        if invest_key in heat_scalars.index:
+            output_data["cap_heat_pump_invest_kw"] = float(heat_scalars[invest_key])
+        else:
+            # fallback: manchmal ist es ein anderer Index-Typ
+            try:
+                output_data["cap_heat_pump_invest_kw"] = float(
+                    heat_scalars.loc[invest_key]
+                )
+            except Exception:
+                pass
 
     return output_data
 

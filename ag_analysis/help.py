@@ -1,4 +1,4 @@
-def lcoh(opex,i,n,capex,e_menge):
+def lcoh(opex,i,n,capex,w_menge):
       """
     Berechnet die Levelized Cost of heat (LCOh).
 
@@ -16,7 +16,7 @@ def lcoh(opex,i,n,capex,e_menge):
         af = (i * (1 + i)**n) / ((1 + i)**n - 1)  # Annuitätenfaktor
         a_capex = capex * af
 
-      return (a_capex+ opex) / e_menge
+      return (a_capex+ opex) / w_menge
 
 
 
