@@ -40,6 +40,9 @@
         "wacc":0.05
         },
     "solarthremie":{
+        "bezeichnung":"selektiv beschichteter Fachkollektor",
+        "referenz_k/(W/m²)":0.05, 
+        "wirkungsgrad":0.65,
         "enabled":false,
         "fläche":500,
         "capex_spezifisch_m²":500,

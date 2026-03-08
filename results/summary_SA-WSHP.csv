@@ -1,0 +1,2 @@
+﻿scenario,grid_import_el_kWh,pv_generation_kWh,grid_export_el_kWh,gas_import_kWh,heat_demand_kWh,heat_dump_kWh,heat_from_hp_kWh,heat_from_gas_boiler_kWh,installed_hp_capacity_kW,installed_gas_boiler_capacity_kW
+SA-WSHP,330521.72156510653,232657.106,177223.22955703078,105937.75536575908,1518515.81,-4.0360677000000005e-12,1423171.83,95343.97999999921,438.5,0.0

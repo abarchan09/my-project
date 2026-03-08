@@ -1,41 +1,115 @@
 from oemof import solph
 
 
+# ============================================================
+# Wärmenachfrage
+# ============================================================
 
-def add_heat_demand(es, heat_bus, df):
+def add_heat_demand(es, buses: dict, df, demand_col: str = "heat_demand_kw"):
+    """
+    Fügt die Wärmenachfrage als feste Last hinzu.
+
+    Die Wärmelast wird als normiertes fix-Profil modelliert.
+    Die maximale Last dient als nominal_value.
+
+    Parameters
+    ----------
+    es :
+        oemof EnergySystem
+    buses : dict
+        Dictionary mit allen Bus-Objekten
+    df : pandas.DataFrame
+        Eingabedaten mit Wärmelast-Zeitreihe
+    demand_col : str
+        Spaltenname der Wärmelast [kW]
+    """
+    b_heat = buses["heat"]
+    demand_max = df[demand_col].max()
+
+    if demand_max <= 0:
+        raise ValueError(
+            f"Die Wärmelast-Zeitreihe '{demand_col}' enthält keine positiven Werte."
+        )
 
     demand = solph.components.Sink(
-        label="last",
+        label="heat_demand",
         inputs={
-            heat_bus: solph.flows.Flow(
-                nominal_value=df["heat_demand_kw"].max(),
-                fix=df["heat_demand_kw"] / df["heat_demand_kw"].max(),
+            b_heat: solph.flows.Flow(
+                nominal_value=demand_max,
+                fix=df[demand_col] / demand_max,
             )
-        }
+        },
     )
 
-    
-
     es.add(demand)
-    
-def add_export(es,el_bus,df):
 
 
-   export = solph.components.Sink(
-     label="export_to_grid",
-     inputs={
-        el_bus: solph.flows.Flow(
-            variable_costs=-(df["el_price_eur_kwh"])
+# ============================================================
+# Stromexport
+# ============================================================
+
+def add_grid_export_sink(es, buses: dict, df, price_col: str = "el_price_eur_kwh"):
+    """
+    Fügt eine Einspeisemöglichkeit ins Stromnetz hinzu.
+
+    Die Einspeisung wird als Sink mit negativen variablen Kosten modelliert,
+    sodass der Export als Erlös in die Zielfunktion eingeht.
+
+    Parameters
+    ----------
+    es :
+        oemof EnergySystem
+    buses : dict
+        Dictionary mit allen Bus-Objekten
+    df : pandas.DataFrame
+        Eingabedaten mit Strompreisen
+    price_col : str
+        Spaltenname des Strompreises bzw. der Einspeisevergütung [€/kWh]
+    """
+    b_el = buses["electricity"]
+
+    export = solph.components.Sink(
+        label="grid_export",
+        inputs={
+            b_el: solph.flows.Flow(
+                variable_costs=-df[price_col]
             )
-     }
-  )
-   es.add(export)
+        },
+    )
 
-def add_heat_dump(es,heat_bus):
-     heat_dump = solph.components.Sink(
+    es.add(export)
+
+
+# ============================================================
+# Überschusswärmesenke
+# ============================================================
+
+def add_heat_dump_sink(es, buses: dict, dump_costs: float = 1000):
+    """
+    Fügt eine technische Überschusswärmesenke hinzu.
+
+    Diese Senke dient dazu, das Optimierungsproblem auch dann lösbar
+    zu halten, wenn zeitweise mehr Wärme erzeugt als nachgefragt wird.
+    Hohe variable Kosten verhindern eine reguläre Nutzung.
+
+    Parameters
+    ----------
+    es :
+        oemof EnergySystem
+    buses : dict
+        Dictionary mit allen Bus-Objekten
+    dump_costs : float
+        Strafkosten der Wärmeabfuhr [€/kWh]
+    """
+    b_heat = buses["heat"]
+
+    heat_dump = solph.components.Sink(
         label="heat_dump",
-        inputs={heat_bus: solph.Flow(variable_costs=1000)
-                }
-             )
-     
-     es.add(heat_dump)
+        inputs={
+            b_heat: solph.flows.Flow(
+                variable_costs=dump_costs
+            )
+        },
+    )
+
+    es.add(heat_dump)
