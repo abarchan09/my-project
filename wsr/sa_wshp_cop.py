@@ -108,6 +108,6 @@ plt.grid(alpha=0.3)
 plt.tight_layout()
 plt.show()
 
-df["cop_wshp"] = df_res["COP_wshp"].values
-df.to_csv(path, index=True)
+#df["cop_wshp"] = df_res["COP_wshp"].values
+#df.to_csv(path, index=True)
 

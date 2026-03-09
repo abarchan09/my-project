@@ -4,7 +4,6 @@ from oemof import solph
 
 from src.scenario import build_scenario
 from src.evaluate import calculate_summary, save_summary_to_csv
-from src.plot_model import plot_heat_supply
 from src.evaluate import extract_result_series
 
 # ============================================================
@@ -125,4 +124,30 @@ if __name__ == "__main__":
     output_data = extract_result_series(results)
     plot_heat_supply_simple(output_data, rolling=True, window=168)
     
+    from src.performance import calculate_performance_indicators
+    performance_df = calculate_performance_indicators(
+    results=results,
+    scenario_name=scenario_name,
+    capex_ashp_kw=1550,
+    capex_gshp_kw=2770,
+    capex_wshp_kw=1010,
+    capex_solar_kw=1273,
+    solar_capacity_kw=30.0,
+    capex_gas_boiler_total=0.0,
+    electricity_price_per_kwh=0.20,
+    gas_price_per_kwh=0.08,
+    lifetime=20,
+    interest_rate=0.02,
+     )
+    output_dir = Path("results")
+    output_dir.mkdir(exist_ok=True)
+
+    file_name = f"per_{scenario_name.lower()}.csv"
+    output_path = output_dir / file_name
+
+    performance_df.to_csv(output_path, index=False, encoding="utf-8-sig")
+
+    print(f"Performance-Ergebnisse gespeichert unter: {output_path}")
+
+    print(performance_df)
 

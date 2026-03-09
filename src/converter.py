@@ -77,7 +77,9 @@ def add_heat_pump(
         outputs={
             b_heat: solph.flows.Flow(
                 nominal_capacity=solph.Investment(
-                    ep_costs=capex_specific * af
+                    ep_costs=capex_specific * af,
+                    
+                    
                 )
             )
         },
@@ -134,9 +136,8 @@ def add_wasser_heat_pump(es, buses: dict, df):
     Hier werden die Investitionskosten der Wärmepumpe und der
     solarthermischen Zusatzkomponente pauschal zusammengefasst.
     """
-    capex_hp = 1010
-    capex_solar = 775
-    capex_total = capex_hp + capex_solar
+
+    capex_total = 1394
 
     add_heat_pump(
         es=es,

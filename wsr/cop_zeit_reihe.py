@@ -120,17 +120,17 @@ plt.show()
 # COP in input_data_25.csv einfügen
 # ============================================================
 
-df_input = pd.read_csv(input_data_path, parse_dates=["time"])
-df_input = df_input.set_index("time")
+#df_input = pd.read_csv(input_data_path, parse_dates=["time"])
+#df_input = df_input.set_index("time")
 
 # COP auf denselben Zeitindex bringen
-df_input["COP"] = cop_t.reindex(df_input.index)
+#df_input["COP"] = cop_t.reindex(df_input.index)
 
 # falls NaNs durch Indexabweichung entstehen
-df_input["COP"] = df_input["COP"].ffill().bfill()
+#df_input["COP"] = df_input["COP"].ffill().bfill()
 
 # wieder speichern
-df_input.reset_index().to_csv(input_data_path, index=False, encoding="utf-8-sig")
+#df_input.reset_index().to_csv(input_data_path, index=False, encoding="utf-8-sig")
 
-print(f"COP erfolgreich als Spalte 'COP' in {input_data_path} gespeichert.")
+#print(f"COP erfolgreich als Spalte 'COP' in {input_data_path} gespeichert.")
 
