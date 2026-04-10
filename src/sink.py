@@ -10,7 +10,7 @@ def add_heat_demand(es, buses: dict, df, demand_col: str = "heat_demand_kw"):
     Fügt die Wärmenachfrage als feste Last hinzu.
 
     Die Wärmelast wird als normiertes fix-Profil modelliert.
-    Die maximale Last dient als nominal_value.
+    Die maximale Last dient als nominal_capacity.
 
     Parameters
     ----------
@@ -35,7 +35,7 @@ def add_heat_demand(es, buses: dict, df, demand_col: str = "heat_demand_kw"):
         label="heat_demand",
         inputs={
             b_heat: solph.flows.Flow(
-                nominal_value=demand_max,
+                nominal_capacity=demand_max,
                 fix=df[demand_col] / demand_max,
             )
         },
@@ -52,8 +52,8 @@ def add_grid_export_sink(es, buses: dict, df, price_col: str = "el_price_eur_kwh
     """
     Fügt eine Einspeisemöglichkeit ins Stromnetz hinzu.
 
-    Die Einspeisung wird als Sink mit negativen variablen Kosten modelliert,
-    sodass der Export als Erlös in die Zielfunktion eingeht.
+    Der Export wird als Sink mit negativen variablen Kosten modelliert,
+    sodass Einspeiseerlöse in die Zielfunktion eingehen.
 
     Parameters
     ----------
@@ -62,9 +62,9 @@ def add_grid_export_sink(es, buses: dict, df, price_col: str = "el_price_eur_kwh
     buses : dict
         Dictionary mit allen Bus-Objekten
     df : pandas.DataFrame
-        Eingabedaten mit Strompreisen
+        Eingabedaten mit Einspeisevergütung bzw. Strompreis
     price_col : str
-        Spaltenname des Strompreises bzw. der Einspeisevergütung [€/kWh]
+        Spaltenname der Einspeisevergütung [€/kWh]
     """
     b_el = buses["electricity"]
 
@@ -81,7 +81,7 @@ def add_grid_export_sink(es, buses: dict, df, price_col: str = "el_price_eur_kwh
 
 
 # ============================================================
-# Überschusswärmesenke
+# Technische Überschusswärmesenke
 # ============================================================
 
 def add_heat_dump_sink(es, buses: dict, dump_costs: float = 1000):

@@ -3,8 +3,10 @@ from pathlib import Path
 from oemof import solph
 
 from src.scenario import build_scenario
-from src.evaluate import calculate_summary, save_summary_to_csv
-from src.evaluate import extract_result_series
+from src.evaluate import calculate_summary, save_summary_to_csv, extract_result_series
+from src.plot_model import plot_heat_supply_simple
+from src.performance import calculate_performance_indicators
+
 
 # ============================================================
 # Daten einlesen
@@ -43,7 +45,10 @@ def load_input_data(path: str, time_col: str = "time") -> pd.DataFrame:
 def solve_scenario(df: pd.DataFrame, scenario_name: str, solver: str = "cbc"):
     """
     Baut und löst ein Szenario.
-    Rückgabe:
+
+    Returns
+    -------
+    tuple
         es, buses, model, results, meta_results
     """
     es, buses = build_scenario(df, scenario_name)
@@ -78,9 +83,9 @@ def save_meta_results(meta_results: dict, output_path: str):
 # ============================================================
 
 if __name__ == "__main__":
-    input_path = r"C:\Users\chaml\Documents\code\bachelorarbeit-mohamed\daten\input_data_25.csv"
+    input_path = r"C:\Users\chaml\Documents\code\bachelorarbeit-mohamed\daten\input_data_25_with_cop.csv"
     output_dir = Path(r"C:\Users\chaml\Documents\code\bachelorarbeit-mohamed\results")
-    scenario_name = "SA-WSHP"  # "ASHP", "GSHP", "SA-WSHP"
+    scenario_name = "SA-WSHP"   # "ASHP", "GSHP", "SA-WSHP"
     solver_name = "cbc"
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -96,7 +101,8 @@ if __name__ == "__main__":
     )
 
     print(f"Szenario {scenario_name} erfolgreich gelöst.\n")
-
+    print("\n--- DEBUG: Heat Bus Flows ---")
+    
     # 3. Meta-Ergebnisse speichern
     meta_path = output_dir / f"meta_results_{scenario_name}.txt"
     save_meta_results(meta_results, meta_path)
@@ -112,42 +118,40 @@ if __name__ == "__main__":
     print(summary_df)
 
     # 5. Summary speichern
-    summary_path = output_dir / f"summary_{scenario_name}.csv"
+    summary_path = output_dir / f"summary_neu_{scenario_name}.csv"
     save_summary_to_csv(summary_df, summary_path)
 
     print(f"\nSummary gespeichert unter: {summary_path}")
     print(f"Meta-Ergebnisse gespeichert unter: {meta_path}")
-    
-    from src.evaluate import extract_result_series
-    from src.plot_model import plot_heat_supply_simple
 
+    # 6. Zeitreihen extrahieren und plotten
     output_data = extract_result_series(results)
-    plot_heat_supply_simple(output_data, rolling=True, window=168)
-    
-    from src.performance import calculate_performance_indicators
+    plot_heat_supply_simple(
+        output_data,
+        rolling=True,
+        window=168,
+        save_path=str(output_dir / f"betriebsverhalten_{scenario_name}.svg")
+    )
+
+    # 7. Performance-Indikatoren berechnen
     performance_df = calculate_performance_indicators(
-    results=results,
-    scenario_name=scenario_name,
-    capex_ashp_kw=1550,
-    capex_gshp_kw=2770,
-    capex_wshp_kw=1010,
-    capex_solar_kw=1273,
-    solar_capacity_kw=30.0,
-    capex_gas_boiler_total=0.0,
-    electricity_price_per_kwh=0.20,
-    gas_price_per_kwh=0.08,
-    lifetime=20,
-    interest_rate=0.02,
-     )
-    output_dir = Path("results")
-    output_dir.mkdir(exist_ok=True)
+        results=results,
+        scenario_name=scenario_name,
+        capex_ashp_kw=1550,
+        capex_gshp_kw=2770,
+        capex_wshp_kw=1010,
+        capex_solar_kw=360,                 # falls Solarthermie in €/kW bewertet wird
+        capex_storage_total_eur=5100,       # fester Speicher-CAPEX
+        capex_gas_boiler_total=0.0,
+        electricity_price_per_kwh=0.20,
+        gas_price_per_kwh=0.12,
+        lifetime=20,
+        interest_rate=0.02,
+    )
 
-    file_name = f"per_{scenario_name.lower()}.csv"
-    output_path = output_dir / file_name
+    performance_path = output_dir / f"performance_{scenario_name}.csv"
+    performance_df.to_csv(performance_path, index=False, encoding="utf-8-sig")
 
-    performance_df.to_csv(output_path, index=False, encoding="utf-8-sig")
-
-    print(f"Performance-Ergebnisse gespeichert unter: {output_path}")
-
+    print(f"Performance-Ergebnisse gespeichert unter: {performance_path}")
+    print("\nPerformance:")
     print(performance_df)
-

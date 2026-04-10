@@ -21,6 +21,8 @@ def annuity_factor(i: float = 0.02, n: int = 20) -> float:
     float
         Annuitätsfaktor [-]
     """
+    if i == 0:
+        return 1 / n
     return (i * (1 + i) ** n) / ((1 + i) ** n - 1)
 
 
@@ -28,9 +30,9 @@ def add_heat_pump(
     es,
     label: str,
     buses: dict,
-    source_bus_key: str,
     cop,
     capex_specific: float,
+    source_bus_key: str = "environmental_heat",
     interest: float = 0.02,
     lifetime: int = 20,
 ):
@@ -38,9 +40,11 @@ def add_heat_pump(
     Fügt eine generische elektrisch angetriebene Wärmepumpe hinzu.
 
     Die Wärmepumpe besitzt:
-    - einen elektrischen Eingang aus dem Strombus
-    - einen quellseitigen Eingang aus dem Quellbus
-    - einen thermischen Ausgang zum Wärmebus
+    - einen elektrischen Eingang aus dem Strombus,
+    - einen quellseitigen Eingang aus dem Quellbus,
+    - einen thermischen Ausgang zum Wärmebus.
+
+    Die Investition wird auf die thermische Ausgangsleistung bezogen.
 
     Parameters
     ----------
@@ -50,42 +54,49 @@ def add_heat_pump(
         Komponentenname
     buses : dict
         Dictionary mit allen Bus-Objekten
-    source_bus_key : str
-        Schlüssel des Quellenbusses im buses-Dictionary,
-        z. B. 'ambient_heat', 'ground_heat', 'water_heat'
     cop :
         Konstanter COP oder zeitvariable COP-Serie
     capex_specific : float
         Spezifische Investitionskosten [€/kW]
+    source_bus_key : str
+        Schlüssel des Quellbusses im buses-Dictionary
     interest : float
         Kalkulationszins [-]
     lifetime : int
         Lebensdauer [a]
     """
-    af = annuity_factor(interest, lifetime)
+    if hasattr(cop, "min"):
+        if cop.min() <= 1:
+            raise ValueError(f"COP von '{label}' muss für alle Zeitpunkte > 1 sein.")
+    else:
+        if cop <= 1:
+            raise ValueError(f"COP von '{label}' muss > 1 sein.")
 
+    af = annuity_factor(interest, lifetime)
+# Input
     b_el = buses["electricity"]
-    b_heat = buses["heat"]
-    b_source = buses[source_bus_key]
+    b_env_heat = buses["environmental_heat"]
+#output
+    heat = buses["heat"]
 
     hp = solph.components.Converter(
         label=label,
         inputs={
             b_el: solph.flows.Flow(),
-            b_source: solph.flows.Flow(),
+            b_env_heat: solph.flows.Flow(),
         },
         outputs={
-            b_heat: solph.flows.Flow(
+             heat: solph.flows.Flow(
                 nominal_capacity=solph.Investment(
                     ep_costs=capex_specific * af,
-                    
+                    maximum=100
                     
                 )
             )
         },
         conversion_factors={
             b_el: 1 / cop,
-            b_source: (cop - 1) / cop,
+            b_env_heat: (cop - 1) / cop,
         },
     )
 
@@ -104,25 +115,25 @@ def add_luft_heat_pump(es, buses: dict, df):
         es=es,
         label="ashp",
         buses=buses,
-        source_bus_key="ambient_heat",
         cop=df["COP"],
         capex_specific=1550,
+        source_bus_key="environmental_heat",
         interest=0.02,
         lifetime=20,
     )
 
 
-def add_gshp_heat_pump(es, buses: dict, df):
+def add_gshp_heat_pump(es, buses: dict, df=None):
     """
-    Sole-Wasser-Wärmepumpe (GSHP) mit zeitvariablem COP.
+    Sole-Wasser-Wärmepumpe (GSHP) mit konstantem COP.
     """
     add_heat_pump(
         es=es,
         label="gshp",
         buses=buses,
-        source_bus_key="ground_heat",
         cop=3.5,
         capex_specific=2770,
+        source_bus_key="environmental_heat",
         interest=0.02,
         lifetime=20,
     )
@@ -130,38 +141,19 @@ def add_gshp_heat_pump(es, buses: dict, df):
 
 def add_wasser_heat_pump(es, buses: dict, df):
     """
-    Wasser-Wasser-Wärmepumpe (WSHP bzw. SA-WSHP) mit zeitvariablem COP.
+    Wasser-Wasser-Wärmepumpe (WSHP) mit zeitvariablem COP.
 
     Hinweis:
-    Hier werden die Investitionskosten der Wärmepumpe und der
-    solarthermischen Zusatzkomponente pauschal zusammengefasst.
+    Die angesetzten spezifischen Investitionskosten beziehen sich
+    auf die thermische Leistung der Gesamtanlage.
     """
-
-    capex_total = 1394
-
     add_heat_pump(
         es=es,
         label="wshp",
         buses=buses,
-        source_bus_key="water_heat",
-        cop=df["cop_wshp"],
-        capex_specific=capex_total,
-        interest=0.02,
-        lifetime=20,
-    )
-
-
-def add_sol_heat_pump(es, buses: dict, cop: float = 3.5):
-    """
-    Solarunterstützte Wärmepumpe mit konstantem COP.
-    """
-    add_heat_pump(
-        es=es,
-        label="solar_hp",
-        buses=buses,
-        source_bus_key="water_heat",
-        cop=cop,
-        capex_specific=2770,
+        cop=df["cop_s_3"],
+        capex_specific=1010,
+        source_bus_key="environmental_heat",
         interest=0.02,
         lifetime=20,
     )
@@ -199,5 +191,33 @@ def add_gas_boiler(es, buses: dict, efficiency: float = 0.90):
             b_heat: efficiency
         },
     )
-
     es.add(gas_boiler)
+
+# ============================================================
+# zischen Konverter sammlt zwei Input und raus output
+# ============================================================
+def add_vor_convertre(es, buses: dict):
+    #  input Busse
+    b_solar_heat = buses["solar_heat"]
+    b_storage = buses["storage_heat"]             
+    
+    #output  
+    b_water = buses["water"] 
+
+    storage = solph.components.Converter(
+        label="vor_speicher",
+        
+        inputs={
+            b_solar_heat: solph.flows.Flow(),
+            b_storage: solph.flows.Flow()
+        },
+        outputs={
+            b_water: solph.flows.Flow(
+                
+
+            ),
+        },
+      
+    )
+
+    es.add(storage)

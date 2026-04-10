@@ -23,21 +23,21 @@ def annuity_factor(i: float, n: int) -> float:
     return (i * (1 + i) ** n) / ((1 + i) ** n - 1)
 
 
-def get_hp_series(ts: dict):
+def get_hp_heat(results) -> float:
     """
-    Summiert alle Wärmepumpen-Zeitreihen.
+    Summiert die erzeugte Wärme aller Wärmepumpen.
     """
-    hp_heat = (
+    ts = extract_result_series(results)
+    return (
         safe_series_sum(ts.get("ashp_heat"))
         + safe_series_sum(ts.get("gshp_heat"))
         + safe_series_sum(ts.get("wshp_heat"))
     )
-    return hp_heat
 
 
 def get_hp_capacity(inv: dict) -> float:
     """
-    Summiert installierte Wärmepumpenleistung.
+    Summiert die installierte Wärmepumpenleistung.
     """
     return (
         inv.get("ashp", 0.0)
@@ -52,26 +52,64 @@ def calculate_capex_hp(
     capex_ashp_kw: float = 1550,
     capex_gshp_kw: float = 2770,
     capex_wshp_kw: float = 1010,
-    capex_solar_kw: float = 1273,
-    solar_capacity_kw: float = 30.0,
+    capex_solar_kw: float | None = None,
+    capex_storage_total_eur: float | None = None,
 ) -> float:
     """
-    Berechnet CAPEX des HP-Systems.
+    Berechnet den gesamten CAPEX des Wärmepumpensystems.
 
-    Für SA-WSHP wird immer WSHP + Solarthermie gemeinsam berücksichtigt.
+    Hinweise
+    --------
+    - ASHP: nur ASHP
+    - GSHP: nur GSHP
+    - SA-WSHP: WSHP + Solarthermie + Pufferspeicher
+
+    Falls Solarthermie und Speicher im oemof-Modell investiv optimiert werden,
+    sollte capex_solar_kw angegeben werden, damit die installierte Solarleistung
+    aus den Ergebnissen verwendet wird.
+
+    Parameters
+    ----------
+    results : dict
+        oemof-Ergebnisse
+    scenario_name : str
+        Name des Szenarios
+    capex_ashp_kw : float
+        Spezifische CAPEX ASHP [€/kW]
+    capex_gshp_kw : float
+        Spezifische CAPEX GSHP [€/kW]
+    capex_wshp_kw : float
+        Spezifische CAPEX WSHP [€/kW]
+    capex_solar_kw : float | None
+        Spezifische CAPEX Solarthermie [€/kW]
+    capex_storage_total_eur : float | None
+        Gesamtkosten des Pufferspeichers [€], falls fester Speicher
+
+    Returns
+    -------
+    float
+        Gesamt-CAPEX des HP-Systems [€]
     """
     inv = extract_investments(results)
 
     if scenario_name == "ASHP":
         return float(inv.get("ashp", 0.0) * capex_ashp_kw)
 
-    elif scenario_name == "GSHP":
+    if scenario_name == "GSHP":
         return float(inv.get("gshp", 0.0) * capex_gshp_kw)
 
-    elif scenario_name == "SA-WSHP":
-        capex_wshp = inv.get("wshp", 0.0) * capex_wshp_kw
-        capex_solar = solar_capacity_kw * capex_solar_kw
-        return float(capex_wshp + capex_solar)
+    if scenario_name == "SA-WSHP":
+        capex_total = inv.get("wshp", 0.0) * capex_wshp_kw
+
+        # Solarthermie nur addieren, wenn sie investiv modelliert wurde
+        if capex_solar_kw is not None:
+            capex_total += inv.get("solar_thermal_source", 0.0) * capex_solar_kw
+
+        # Pufferspeicher als fixer Gesamtbetrag
+        if capex_storage_total_eur is not None:
+            capex_total += capex_storage_total_eur
+
+        return float(capex_total)
 
     return 0.0
 
@@ -110,15 +148,17 @@ def calculate_opex_system(
     gas_price_series: pd.Series | None = None,
 ) -> float:
     """
-    OPEX des Gesamtsystems = Stromkosten + Gaskosten.
+    OPEX des Gesamtsystems = Stromkosten + Gaskosten - Exporterlöse.
     """
     ts = extract_result_series(results)
 
     grid_import_el = ts.get("grid_import_el")
     gas_import = ts.get("gas_import")
+    grid_export_el = ts.get("grid_export_el")
 
     opex_el = 0.0
     opex_gas = 0.0
+    export_revenue = 0.0
 
     if grid_import_el is not None:
         if electricity_price_series is not None:
@@ -134,7 +174,14 @@ def calculate_opex_system(
         elif gas_price_per_kwh is not None:
             opex_gas = float(gas_import.fillna(0).sum() * gas_price_per_kwh)
 
-    return opex_el + opex_gas
+    if grid_export_el is not None:
+        if electricity_price_series is not None:
+            export_price = electricity_price_series.reindex(grid_export_el.index).ffill().bfill()
+            export_revenue = float((grid_export_el.fillna(0) * export_price).sum())
+        elif electricity_price_per_kwh is not None:
+            export_revenue = float(grid_export_el.fillna(0).sum() * electricity_price_per_kwh)
+
+    return opex_el + opex_gas - export_revenue
 
 
 def calculate_spf_hp(results) -> float:
@@ -144,7 +191,7 @@ def calculate_spf_hp(results) -> float:
     """
     ts = extract_result_series(results)
 
-    hp_heat = get_hp_series(ts)
+    hp_heat = get_hp_heat(results)
     grid_import_el = safe_series_sum(ts.get("grid_import_el"))
 
     if grid_import_el <= 0:
@@ -157,9 +204,6 @@ def calculate_spf_system(results) -> float:
     """
     SPF des Gesamtsystems:
     SPF_system = gesamte Nutzwärme / (Strombezug + Gasbezug)
-
-    Achtung:
-    Diese Definition ist eine Systemkennzahl, keine klassische WP-SPF.
     """
     ts = extract_result_series(results)
 
@@ -180,8 +224,8 @@ def calculate_lcoh_hp(
     capex_ashp_kw: float = 1550,
     capex_gshp_kw: float = 2770,
     capex_wshp_kw: float = 1010,
-    capex_solar_kw: float = 1273,
-    solar_capacity_kw: float = 30.0,
+    capex_solar_kw: float | None = None,
+    capex_storage_total_eur: float | None = None,
     electricity_price_per_kwh: float | None = None,
     electricity_price_series: pd.Series | None = None,
     lifetime: int = 20,
@@ -189,10 +233,11 @@ def calculate_lcoh_hp(
 ) -> float:
     """
     LCOH des HP-Systems.
-    Bei SA-WSHP immer als kombiniertes System aus WSHP + Solarthermie.
+
+    Bei SA-WSHP wird das System aus WSHP + Solarthermie + Speicher
+    gemeinsam betrachtet.
     """
-    ts = extract_result_series(results)
-    q_hp = get_hp_series(ts)
+    q_hp = get_hp_heat(results)
 
     if q_hp <= 0:
         return 0.0
@@ -204,7 +249,7 @@ def calculate_lcoh_hp(
         capex_gshp_kw=capex_gshp_kw,
         capex_wshp_kw=capex_wshp_kw,
         capex_solar_kw=capex_solar_kw,
-        solar_capacity_kw=solar_capacity_kw,
+        capex_storage_total_eur=capex_storage_total_eur,
     )
 
     opex_hp = calculate_opex_hp(
@@ -258,8 +303,8 @@ def calculate_performance_indicators(
     capex_ashp_kw: float = 1550,
     capex_gshp_kw: float = 2770,
     capex_wshp_kw: float = 1010,
-    capex_solar_kw: float = 1273,
-    solar_capacity_kw: float = 30.0,
+    capex_solar_kw: float | None = None,
+    capex_storage_total_eur: float | None = None,
     capex_gas_boiler_total: float = 0.0,
     electricity_price_per_kwh: float | None = None,
     gas_price_per_kwh: float | None = None,
@@ -270,7 +315,6 @@ def calculate_performance_indicators(
 ) -> pd.DataFrame:
     """
     Berechnet zentrale techno-ökonomische Kennzahlen.
-    Für SA-WSHP wird das HP-System immer als WSHP + Solarthermie gebildet.
     """
 
     capex_hp = calculate_capex_hp(
@@ -280,7 +324,7 @@ def calculate_performance_indicators(
         capex_gshp_kw=capex_gshp_kw,
         capex_wshp_kw=capex_wshp_kw,
         capex_solar_kw=capex_solar_kw,
-        solar_capacity_kw=solar_capacity_kw,
+        capex_storage_total_eur=capex_storage_total_eur,
     )
 
     opex_hp = calculate_opex_hp(
@@ -307,7 +351,7 @@ def calculate_performance_indicators(
         capex_gshp_kw=capex_gshp_kw,
         capex_wshp_kw=capex_wshp_kw,
         capex_solar_kw=capex_solar_kw,
-        solar_capacity_kw=solar_capacity_kw,
+        capex_storage_total_eur=capex_storage_total_eur,
         electricity_price_per_kwh=electricity_price_per_kwh,
         electricity_price_series=electricity_price_series,
         lifetime=lifetime,
