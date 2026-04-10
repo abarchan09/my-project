@@ -83,7 +83,7 @@ def calculate_capex_hp(
     capex_solar_kw : float | None
         Spezifische CAPEX Solarthermie [€/kW]
     capex_storage_total_eur : float | None
-        Gesamtkosten des Pufferspeichers [€], falls fester Speicher
+        Spezische CAPEX des Pufferspeichers [€/kW]
 
     Returns
     -------
@@ -107,7 +107,7 @@ def calculate_capex_hp(
 
         # Pufferspeicher als fixer Gesamtbetrag
         if capex_storage_total_eur is not None:
-            capex_total += capex_storage_total_eur
+            capex_total += inv.get("pufferspeicher",0.0)*capex_storage_total_eur
 
         return float(capex_total)
 
@@ -193,11 +193,15 @@ def calculate_spf_hp(results) -> float:
 
     hp_heat = get_hp_heat(results)
     grid_import_el = safe_series_sum(ts.get("grid_import_el"))
+    pv_generation = safe_series_sum(ts.get("pv_el"))
+    grid_export=safe_series_sum(ts.get("grid_export_el"))
+
+
 
     if grid_import_el <= 0:
         return 0.0
 
-    return hp_heat / grid_import_el
+    return hp_heat / (grid_import_el+(pv_generation-grid_export))
 
 
 def calculate_spf_system(results) -> float:

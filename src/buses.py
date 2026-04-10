@@ -37,7 +37,8 @@ def create_buses():
 
         # Szenario 3
         "storage_heat":solph.buses.Bus(label="storage_heat"),
-        "water": solph.buses.Bus(label="water")
+        "water": solph.buses.Bus(label="water"),
+        
 
     }
 

@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-path = r"C:\Users\chaml\Documents\code\bachelorarbeit-mohamed\results\totat.csv"
+path = r"C:\Users\chaml\Documents\code\bachelorarbeit-mohamed\results\total.csv"
 
 df = pd.read_csv(path)
 
@@ -30,10 +30,10 @@ ax.set_title("Vergleich der SPF der Wärmepumpe und Gesamtsystem ")
 ax.legend()
 
 for i, v in enumerate(hp):
-    ax.text(v + 0.02, y[i] - h/2, f"{v:.2f}", va="center")
+    ax.text(v + 0.02, y[i] - h/2, f"{v:.1f}", va="center")
 
 for i, v in enumerate(system):
-    ax.text(v + 0.02, y[i] + h/2, f"{v:.2f}", va="center")
+    ax.text(v + 0.02, y[i] + h/2, f"{v:.1f}", va="center")
 
 plt.tight_layout()
 plt.savefig("spf_vergleich.svg", bbox_inches="tight")

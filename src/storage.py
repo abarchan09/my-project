@@ -18,7 +18,7 @@ def add_puffer_speicher(es, buses: dict):
     """
 
     #  input Busse
-    b_water = buses["water"]
+    b_solar_heat = buses["solar_heat"]
               
     
     #output  
@@ -44,11 +44,10 @@ def add_puffer_speicher(es, buses: dict):
 
     storage = solph.components.GenericStorage(
         label="pufferspeicher",
-        nominal_storage_capacity=solph.Investment(
-                  ep_costs=ep_costs),
+        nominal_storage_capacity= storage_capacity_kwh,
         
         inputs={
-            b_water: solph.flows.Flow(),
+            b_solar_heat: solph.flows.Flow(),
            
         },
         outputs={

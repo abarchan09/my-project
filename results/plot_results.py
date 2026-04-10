@@ -2,12 +2,16 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-path = r"C:\Users\chaml\Documents\code\bachelorarbeit-mohamed\results\totat.csv"
+path_1 = r"C:\Users\chaml\Documents\code\bachelorarbeit-mohamed\results\total.csv"
+path_2=r"C:\Users\chaml\Documents\code\bachelorarbeit-mohamed\results\total_max_100.csv"
 
-df = pd.read_csv(path)
-
+df_1 = pd.read_csv(path_1)
+system = df_1["spf_system"].values
+df_2=pd.read_csv(path_2)
+system= df_2["spf_system"].values
 # Zeilen auswählen
-df = df.loc[0:4].copy()
+df = df_1.loc[0:4].copy()
+df =df_2.loc[0:4].copy()
 
 # Namen für die Achse
 scenarios = ["S1", "S2","S3"]
@@ -30,7 +34,7 @@ ax.set_yticklabels(scenarios)
 
 ax.set_xlabel("LCOH [cent/kWh]")
 ax.set_title("Vergleich von LCOH der Wärmepumpe und Gesamtsystem")
-ax.set_xlim(1,16)
+ax.set_xlim(1,150)
 ax.legend()
 
 # Werte auf Balken schreiben

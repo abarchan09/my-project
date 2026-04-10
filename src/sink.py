@@ -101,12 +101,12 @@ def add_heat_dump_sink(es, buses: dict, dump_costs: float = 1000):
     dump_costs : float
         Strafkosten der Wärmeabfuhr [€/kWh]
     """
-    b_heat = buses["heat"]
+    b_env_heat = buses["environmental_heat"]
 
     heat_dump = solph.components.Sink(
         label="heat_dump",
         inputs={
-            b_heat: solph.flows.Flow(
+             b_env_heat: solph.flows.Flow(
                 variable_costs=dump_costs
             )
         },

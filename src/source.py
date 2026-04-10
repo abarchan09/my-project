@@ -183,9 +183,8 @@ def add_solar_thermal_source(es, buses: dict, df, profile_col: str = "solar_prof
         label="solar_thermal_source",
         outputs={
             b_solar_heat: solph.flows.Flow(
-                nominal_capacity=solph.Investment(
-                    ep_costs=ep_costs
-                ) ,
+                nominal_capacity= solar_max*nutzungsgrad
+                 ,
                 fix=df[profile_col]
                 
             )

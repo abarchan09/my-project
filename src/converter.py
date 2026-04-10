@@ -76,6 +76,7 @@ def add_heat_pump(
 # Input
     b_el = buses["electricity"]
     b_env_heat = buses["environmental_heat"]
+    
 #output
     heat = buses["heat"]
 
@@ -84,6 +85,7 @@ def add_heat_pump(
         inputs={
             b_el: solph.flows.Flow(),
             b_env_heat: solph.flows.Flow(),
+            
         },
         outputs={
              heat: solph.flows.Flow(
@@ -91,12 +93,14 @@ def add_heat_pump(
                     ep_costs=capex_specific * af,
                     maximum=100
                     
+                    
                 )
             )
         },
         conversion_factors={
             b_el: 1 / cop,
-            b_env_heat: (cop - 1) / cop,
+             b_env_heat: (cop - 1) / cop,
+            
         },
     )
 
@@ -196,28 +200,3 @@ def add_gas_boiler(es, buses: dict, efficiency: float = 0.90):
 # ============================================================
 # zischen Konverter sammlt zwei Input und raus output
 # ============================================================
-def add_vor_convertre(es, buses: dict):
-    #  input Busse
-    b_solar_heat = buses["solar_heat"]
-    b_storage = buses["storage_heat"]             
-    
-    #output  
-    b_water = buses["water"] 
-
-    storage = solph.components.Converter(
-        label="vor_speicher",
-        
-        inputs={
-            b_solar_heat: solph.flows.Flow(),
-            b_storage: solph.flows.Flow()
-        },
-        outputs={
-            b_water: solph.flows.Flow(
-                
-
-            ),
-        },
-      
-    )
-
-    es.add(storage)

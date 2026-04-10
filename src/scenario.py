@@ -23,7 +23,7 @@ from .converter import (
     add_gshp_heat_pump,
     add_wasser_heat_pump,
     add_gas_boiler,
-    add_vor_convertre
+    
    
 )
 from .storage import(
@@ -105,7 +105,7 @@ def add_sawshp_system(es, buses, df):
     """
 
     # Grundlegende Quellwärme
-    add_storage_heat_source(es, buses)
+    #add_storage_heat_source(es, buses)
 
     # Solarthermische Zusatzquelle
     add_solar_thermal_source(es, buses, df)
@@ -118,8 +118,7 @@ def add_sawshp_system(es, buses, df):
 
     # Spitzenlastkessel
     add_gas_boiler(es, buses)
-    # vor converter
-    add_vor_convertre(es, buses)
+   
 
 #------------------------------------------------------------#
 #        Bauen der Szenario nach der Namen der Technologien  #
