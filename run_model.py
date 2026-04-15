@@ -4,7 +4,7 @@ from oemof import solph
 
 from src.scenario import build_scenario
 from src.evaluate import calculate_summary, save_summary_to_csv, extract_result_series
-from src.plot_model import plot_heat_supply_simple
+from src.plot_model import  plot_heat_supply_simple
 from src.performance import calculate_performance_indicators
 
 
@@ -83,7 +83,7 @@ def save_meta_results(meta_results: dict, output_path: str):
 # ============================================================
 
 if __name__ == "__main__":
-    input_path = r"C:\Users\chaml\Documents\code\bachelorarbeit-mohamed\daten\input_data_25_with_cop.csv"
+    input_path = r"C:\Users\chaml\Documents\code\bachelorarbeit-mohamed\daten\input_data_25.csv"
     output_dir = Path(r"C:\Users\chaml\Documents\code\bachelorarbeit-mohamed\results")
     scenario_name = "SA-WSHP"   # "ASHP", "GSHP", "SA-WSHP"
     solver_name = "cbc"
@@ -102,7 +102,7 @@ if __name__ == "__main__":
 
     print(f"Szenario {scenario_name} erfolgreich gelöst.\n")
     print("\n--- DEBUG: Heat Bus Flows ---")
-    
+
     # 3. Meta-Ergebnisse speichern
     meta_path = output_dir / f"meta_results_{scenario_name}.txt"
     save_meta_results(meta_results, meta_path)
@@ -126,6 +126,7 @@ if __name__ == "__main__":
 
     # 6. Zeitreihen extrahieren und plotten
     output_data = extract_result_series(results)
+
     plot_heat_supply_simple(
         output_data,
         rolling=True,

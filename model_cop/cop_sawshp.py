@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import matplotlib.patches as mpatches
 
+
 def calculate_cop_sawshp(
     weather_path: str,
     ghi_col: str = "ghi",
@@ -85,11 +86,58 @@ def calculate_cop_sawshp(
     return df
 
 
+def add_cop_to_input_csv(
+    df_results: pd.DataFrame,
+    input_path: str,
+    time_col: str = "time"
+) -> pd.DataFrame:
+    """
+    Fügt die Spalte 'cop_s_3' zur bestehenden input_data_25.csv hinzu.
+    Falls 'cop_s_3' schon existiert, wird sie überschrieben.
+    """
+
+    if not os.path.exists(input_path):
+        raise FileNotFoundError(f"Input-Datei nicht gefunden: {input_path}")
+
+    df_input = pd.read_csv(input_path)
+
+    if time_col not in df_input.columns:
+        raise KeyError(f"Zeitspalte '{time_col}' nicht in Input-Datei vorhanden.")
+
+    df_input[time_col] = pd.to_datetime(df_input[time_col], errors="coerce")
+    if df_input[time_col].isna().any():
+        n_bad = df_input[time_col].isna().sum()
+        raise ValueError(f"{n_bad} ungültige Zeitwerte in der Input-Datei gefunden.")
+
+    # Ergebnis-DataFrame vorbereiten
+    df_results_reset = df_results.reset_index()[[time_col, "cop_s_3"]].copy()
+    df_results_reset[time_col] = pd.to_datetime(df_results_reset[time_col], errors="coerce")
+
+    # Falls Spalte schon existiert, zuerst löschen
+    if "cop_s_3" in df_input.columns:
+        df_input = df_input.drop(columns=["cop_s_3"])
+
+    # Merge über Zeit
+    df_input = df_input.merge(df_results_reset, on=time_col, how="left")
+
+    # Optional: runden
+    df_input["cop_s_3"] = df_input["cop_s_3"].round(3)
+
+    # Datei speichern
+    df_input.to_csv(input_path, index=False)
+
+    print(f"Spalte 'cop_s_3' wurde erfolgreich in die Datei gespeichert:")
+    print(input_path)
+
+    return df_input
+
+
 def plot_cop_sawshp_with_heating_period(
-    df_results,
-    T_gw=10.0,
-    T_source_max=15.0,
-    daily_mean=True
+    df_results: pd.DataFrame,
+    T_gw: float = 10.0,
+    T_source_max: float = 15.0,
+    daily_mean: bool = True,
+    save_path: str = r"C:\Users\chaml\Documents\code\bachelorarbeit-mohamed\Png\cop_sawshp_heizperiode.svg"
 ):
     """
     Plot von Quellentemperatur und COP über das Jahr.
@@ -101,11 +149,18 @@ def plot_cop_sawshp_with_heating_period(
     if not isinstance(df_results.index, pd.DatetimeIndex):
         raise ValueError("Der Index von df_results muss ein DatetimeIndex sein.")
 
+    required_cols = ["T_source", "cop_s_3"]
+    missing_cols = [col for col in required_cols if col not in df_results.columns]
+    if missing_cols:
+        raise KeyError(f"Fehlende Spalten in df_results: {missing_cols}")
+
     df_plot = df_results[["T_source", "cop_s_3"]].copy()
 
     if daily_mean:
         df_plot = df_plot.resample("D").mean()
+
     df_plot = df_plot.dropna()
+
     fig, ax1 = plt.subplots(figsize=(12, 5))
 
     # Heizperioden farbig markieren
@@ -161,32 +216,36 @@ def plot_cop_sawshp_with_heating_period(
     ax1.xaxis.set_major_locator(mdates.MonthLocator())
     ax1.xaxis.set_major_formatter(mdates.DateFormatter("%b"))
 
-    # Legende erweitern
+    # Legende
     heating_patch = mpatches.Patch(color="red", alpha=0.15, label="Heizperiode")
 
     lines = ax1.get_lines() + ax2.get_lines()
     labels = [line.get_label() for line in lines]
-
     lines.append(heating_patch)
     labels.append("Heizperiode")
 
     ax1.legend(lines, labels, loc="upper right")
     ax1.set_xlim(df_plot.index.min(), df_plot.index.max())
-    plt.margins(x=0) 
+
+    plt.margins(x=0)
     plt.title("Zeitabhängiger COP der SA-WSHP")
     plt.tight_layout()
+
     plt.savefig(
-        r"C:\Users\chaml\Documents\code\bachelorarbeit-mohamed\Png\cop_sawshp_heizperiode.svg",
+        save_path,
         format="svg",
         bbox_inches="tight"
     )
 
     plt.show()
-    
+
 
 if __name__ == "__main__":
     weather_path = r"C:\Users\chaml\OneDrive\Documents\datenbank\daten\daten_quelle\wetter\weather_data.csv"
+    input_path = r"C:\Users\chaml\Documents\code\bachelorarbeit-mohamed\daten\input_data_25.csv"
+    plot_path = r"C:\Users\chaml\Documents\code\bachelorarbeit-mohamed\results\cop_sawshp_heizperiode.svg"
 
+    # 1) COP berechnen
     df_results = calculate_cop_sawshp(
         weather_path=weather_path,
         A_coll=500.0,
@@ -195,10 +254,18 @@ if __name__ == "__main__":
         T_senk=55.0
     )
 
+    # 2) cop_s_3 in bestehende CSV einfügen
+    df_input_updated = add_cop_to_input_csv(
+        df_results=df_results,
+        input_path=input_path,
+        time_col="time"
+    )
+
+    # 3) Plot erstellen
     plot_cop_sawshp_with_heating_period(
-        df_results,
+        df_results=df_results,
         T_gw=10.0,
         T_source_max=15.0,
-        daily_mean=True
+        daily_mean=True,
+        save_path=plot_path
     )
-   

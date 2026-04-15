@@ -46,6 +46,8 @@ def plot_heat_supply_simple(
     print("Summe WSHP:", wshp_heat.sum())
     print("Summe HP gesamt:", hp_heat_total.sum())
     print("Summe Gasboiler:", gas_boiler_heat.sum())
+    print("Summe Speicherladung:", storage_charge.sum())
+    print("Summe Speicherentladung:", storage_discharge.sum())
 
     if rolling:
         heat_demand = heat_demand.rolling(window, min_periods=1).mean()
@@ -54,9 +56,16 @@ def plot_heat_supply_simple(
         storage_charge = storage_charge.rolling(window, min_periods=1).mean()
         storage_discharge = storage_discharge.rolling(window, min_periods=1).mean()
 
-    fig, ax = plt.subplots(figsize=(12, 4))
+    fig, (ax1, ax2) = plt.subplots(
+        2, 1,
+        figsize=(12, 6),
+        sharex=True,
+        gridspec_kw={"height_ratios": [3, 1]}
+    )
 
-    # Stackplot nur mit Gesamt-HP + Gas
+    # ----------------------------------
+    # Oberer Plot: Wärmebedarf
+    # ----------------------------------
     stack_series = []
     stack_labels = []
 
@@ -69,15 +78,14 @@ def plot_heat_supply_simple(
         stack_labels.append("Gasboiler")
 
     if stack_series:
-        ax.stackplot(
+        ax1.stackplot(
             heat_demand.index,
             *stack_series,
             labels=stack_labels,
             alpha=0.8,
         )
 
-    # Wärmebedarf schwarz darüber
-    ax.plot(
+    ax1.plot(
         heat_demand.index,
         heat_demand.values,
         label="Wärmebedarf",
@@ -85,30 +93,35 @@ def plot_heat_supply_simple(
         color="black",
     )
 
-    # Speicher optional
-    if storage_charge.sum() > 0:
-        ax.plot(
-            heat_demand.index,
-            storage_charge.values,
-            label="Speicheraufladung",
-            linestyle="--",
-            linewidth=1.5,
-        )
+    ax1.set_ylabel("Wärmeleistung in kW")
+    ax1.set_title("Zeitlicher Verlauf der Wärmebereitstellung")
+    ax1.grid(alpha=0.3)
+    ax1.legend(loc="upper right")
 
-    if storage_discharge.sum() > 0:
-        ax.plot(
-            heat_demand.index,
-            storage_discharge.values,
-            label="Speicherentladung",
-            linestyle=":",
-            linewidth=1.7,
-        )
+    # ----------------------------------
+    # Unterer Plot: Speicher
+    # ----------------------------------
+    ax2.plot(
+        heat_demand.index,
+        storage_charge.values,
+        label="Speicherladung",
+        linestyle="--",
+        linewidth=1.5,
+    )
 
-    ax.set_ylabel("Wärmeleistung in kW")
-    ax.set_xlabel("Zeit")
-    ax.set_title("Deckung des Wärmebedarfs durch Wärmepumpe, Gasboiler und Speicher")
-    ax.grid(alpha=0.3)
-    ax.legend(loc="upper right")
+    ax2.plot(
+        heat_demand.index,
+        storage_discharge.values,
+        label="Speicherentladung",
+        linestyle=":",
+        linewidth=1.7,
+    )
+
+    ax2.set_ylabel("Leistung in kW")
+    ax2.set_xlabel("Zeit")
+    ax2.set_title("Zeitlicher Verlauf von Speicherladung und Speicherentladung")
+    ax2.grid(alpha=0.3)
+    ax2.legend(loc="upper right")
 
     plt.tight_layout()
     plt.savefig(save_path, bbox_inches="tight")

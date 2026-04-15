@@ -55,10 +55,16 @@ def extract_result_series(results):
         data["grid_import_el"] = get_sequence_or_none(el_seq, "electricity_grid", "electricity")
         data["pv_el"] = get_sequence_or_none(el_seq, "pv_source", "electricity")
         data["grid_export_el"] = get_sequence_or_none(el_seq, "electricity", "grid_export")
+        data["electricity_to_ashp"] = get_sequence_or_none(el_seq, "electricity", "ashp")
+        data["electricity_to_gshp"] = get_sequence_or_none(el_seq, "electricity", "gshp")
+        data["electricity_to_wshp"] = get_sequence_or_none(el_seq, "electricity", "wshp")
     except Exception:
         data["grid_import_el"] = None
         data["pv_el"] = None
         data["grid_export_el"] = None
+        data["electricity_to_ashp"] = None
+        data["electricity_to_gshp"] = None
+        data["electricity_to_wshp"] = None
 
     # --------------------------------------------------------
     # Gasbus
@@ -91,58 +97,25 @@ def extract_result_series(results):
         data["wshp_heat"] = None
 
     # --------------------------------------------------------
-    # Solarthermie-Bus
+    # solar_heat-Bus
     # --------------------------------------------------------
     try:
         solar_seq = views.node(results, "solar_heat")["sequences"]
         data["solar_thermal_generation"] = get_sequence_or_none(
             solar_seq, "solar_thermal_source", "solar_heat"
         )
-        data["solar_to_preconverter"] = get_sequence_or_none(
-            solar_seq, "solar_heat", "vor_speicher"
+        data["solar_to_storage"] = get_sequence_or_none(
+            solar_seq, "solar_heat", "pufferspeicher"
         )
     except Exception:
         data["solar_thermal_generation"] = None
-        data["solar_to_preconverter"] = None
+        data["solar_to_storage"] = None
 
     # --------------------------------------------------------
-    # storage_heat-Bus
-    # --------------------------------------------------------
-    try:
-        sh_seq = views.node(results, "storage_heat")["sequences"]
-        data["storage_heat_source_generation"] = get_sequence_or_none(
-            sh_seq, "environmental_heat_source", "storage_heat"
-        )
-        data["storage_heat_to_preconverter"] = get_sequence_or_none(
-            sh_seq, "storage_heat", "vor_speicher"
-        )
-    except Exception:
-        data["storage_heat_source_generation"] = None
-        data["storage_heat_to_preconverter"] = None
-
-    # --------------------------------------------------------
-    # water-Bus
-    # --------------------------------------------------------
-    try:
-        water_seq = views.node(results, "water")["sequences"]
-        data["preconverter_to_water"] = get_sequence_or_none(
-            water_seq, "vor_speicher", "water"
-        )
-        data["water_to_storage"] = get_sequence_or_none(
-            water_seq, "water", "pufferspeicher"
-        )
-    except Exception:
-        data["preconverter_to_water"] = None
-        data["water_to_storage"] = None
-
-    # --------------------------------------------------------
-    # Umweltwärme-Bus
+    # environmental_heat-Bus
     # --------------------------------------------------------
     try:
         env_seq = views.node(results, "environmental_heat")["sequences"]
-        data["environmental_source_heat"] = get_sequence_or_none(
-            env_seq, "environmental_heat_source", "environmental_heat"
-        )
         data["storage_to_env_heat"] = get_sequence_or_none(
             env_seq, "pufferspeicher", "environmental_heat"
         )
@@ -156,21 +129,20 @@ def extract_result_series(results):
             env_seq, "environmental_heat", "wshp"
         )
     except Exception:
-        data["environmental_source_heat"] = None
         data["storage_to_env_heat"] = None
         data["env_heat_to_ashp"] = None
         data["env_heat_to_gshp"] = None
         data["env_heat_to_wshp"] = None
 
     # --------------------------------------------------------
-    # Speicher
+    # Pufferspeicher direkt
     # --------------------------------------------------------
     try:
         storage_node = views.node(results, "pufferspeicher")
         storage_seq = storage_node["sequences"]
 
         data["storage_in"] = get_sequence_or_none(
-            storage_seq, "water", "pufferspeicher"
+            storage_seq, "solar_heat", "pufferspeicher"
         )
         data["storage_out"] = get_sequence_or_none(
             storage_seq, "pufferspeicher", "environmental_heat"
@@ -239,31 +211,28 @@ def calculate_summary(results, scenario_name: str):
     heat_dump = safe_series_sum(ts["heat_dump"])
 
     solar_generation = safe_series_sum(ts["solar_thermal_generation"])
-    solar_to_preconverter = safe_series_sum(ts["solar_to_preconverter"])
-
-    storage_heat_source_generation = safe_series_sum(ts["storage_heat_source_generation"])
-    storage_heat_to_preconverter = safe_series_sum(ts["storage_heat_to_preconverter"])
-
-    preconverter_to_water = safe_series_sum(ts["preconverter_to_water"])
-    water_to_storage = safe_series_sum(ts["water_to_storage"])
+    solar_to_storage = safe_series_sum(ts["solar_to_storage"])
 
     storage_in = safe_series_sum(ts["storage_in"])
     storage_out = safe_series_sum(ts["storage_out"])
-
-    environmental_source_heat = safe_series_sum(ts["environmental_source_heat"])
     storage_to_env_heat = safe_series_sum(ts["storage_to_env_heat"])
 
-    hp_heat = (
-        safe_series_sum(ts["ashp_heat"])
-        + safe_series_sum(ts["gshp_heat"])
-        + safe_series_sum(ts["wshp_heat"])
-    )
+    env_heat_to_ashp = safe_series_sum(ts["env_heat_to_ashp"])
+    env_heat_to_gshp = safe_series_sum(ts["env_heat_to_gshp"])
+    env_heat_to_wshp = safe_series_sum(ts["env_heat_to_wshp"])
+
+    electricity_to_ashp = safe_series_sum(ts["electricity_to_ashp"])
+    electricity_to_gshp = safe_series_sum(ts["electricity_to_gshp"])
+    electricity_to_wshp = safe_series_sum(ts["electricity_to_wshp"])
+
+    ashp_heat = safe_series_sum(ts["ashp_heat"])
+    gshp_heat = safe_series_sum(ts["gshp_heat"])
+    wshp_heat = safe_series_sum(ts["wshp_heat"])
+    hp_heat = ashp_heat + gshp_heat + wshp_heat
+
     gas_boiler_heat = safe_series_sum(ts["gas_boiler_heat"])
 
     installed_hp_capacity = inv["ashp"] + inv["gshp"] + inv["wshp"]
-    installed_gas_boiler_capacity = inv["gas_boiler"]
-    installed_storage_capacity = inv["pufferspeicher"]
-    installed_solar_capacity = inv["solar_thermal_source"]
 
     summary = {
         "scenario": scenario_name,
@@ -276,20 +245,24 @@ def calculate_summary(results, scenario_name: str):
         "heat_dump_kWh": heat_dump,
         "heat_from_hp_kWh": hp_heat,
         "heat_from_gas_boiler_kWh": gas_boiler_heat,
+        "ashp_heat_kWh": ashp_heat,
+        "gshp_heat_kWh": gshp_heat,
+        "wshp_heat_kWh": wshp_heat,
         "solar_thermal_generation_kWh": solar_generation,
-        "solar_to_preconverter_kWh": solar_to_preconverter,
-        "storage_heat_source_generation_kWh": storage_heat_source_generation,
-        "storage_heat_to_preconverter_kWh": storage_heat_to_preconverter,
-        "preconverter_to_water_kWh": preconverter_to_water,
-        "water_to_storage_kWh": water_to_storage,
+        "solar_to_storage_kWh": solar_to_storage,
         "storage_charge_kWh": storage_in,
         "storage_discharge_kWh": storage_out,
-        "environmental_source_heat_kWh": environmental_source_heat,
         "storage_to_environmental_heat_kWh": storage_to_env_heat,
+        "env_heat_to_ashp_kWh": env_heat_to_ashp,
+        "env_heat_to_gshp_kWh": env_heat_to_gshp,
+        "env_heat_to_wshp_kWh": env_heat_to_wshp,
+        "electricity_to_ashp_kWh": electricity_to_ashp,
+        "electricity_to_gshp_kWh": electricity_to_gshp,
+        "electricity_to_wshp_kWh": electricity_to_wshp,
         "installed_hp_capacity_kW": installed_hp_capacity,
-        "installed_gas_boiler_capacity_kW": installed_gas_boiler_capacity,
-        "installed_storage_capacity_kWh": installed_storage_capacity,
-        "installed_solar_capacity_kW": installed_solar_capacity,
+        "check_solar_minus_storage_kWh": solar_generation - solar_to_storage,
+        "check_storage_balance_kWh": storage_in - storage_out,
+        "check_wshp_balance_kWh": wshp_heat - (env_heat_to_wshp + electricity_to_wshp),
     }
 
     return pd.DataFrame([summary])

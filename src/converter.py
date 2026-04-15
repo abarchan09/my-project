@@ -91,7 +91,7 @@ def add_heat_pump(
              heat: solph.flows.Flow(
                 nominal_capacity=solph.Investment(
                     ep_costs=capex_specific * af,
-                    maximum=100
+                    
                     
                     
                 )

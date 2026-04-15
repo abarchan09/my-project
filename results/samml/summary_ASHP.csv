@@ -1,2 +1,0 @@
-﻿scenario,grid_import_el_kWh,pv_generation_kWh,grid_export_el_kWh,gas_import_kWh,heat_demand_kWh,heat_dump_kWh,heat_from_hp_kWh,heat_from_gas_boiler_kWh,installed_hp_capacity_kW,installed_gas_boiler_capacity_kW
-ASHP,490818.6433920707,232657.106,170873.044031699,121104.17767585911,1518515.81,-3.2447771e-12,1409522.05,108993.75999999927,429.32,0.0
