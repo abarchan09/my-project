@@ -1,8 +1,14 @@
-# Bachelor Thesis Mohamed Chamlal
--  Diese Arbeit untersucht Wärmeversorgung der Fh in Jülich mit Solarthermie und Wärmepumpe und PV
--  Input daten unter data.csv für 2025 sind fertig zur probieren in Modell 
--  erste Modellierung des System erfolgreich abgschlossen
-- cbc solver funktioniert
-- model infeasible
-- probleme strom preis beheben 0.08
-- results lcoh
+# Techno-Economic Comparison of Heat Pump Systems
+
+This project compares different heat pump technologies for supplying a university building using Python and oemof-solph.
+
+## Technologies
+- Air Source Heat Pump
+- Ground Source Heat Pump
+- Solar Assisted Water Source Heat Pump
+
+## Tools
+- Python
+- oemof-solph
+- Pyomo
+- CBC Solver
