@@ -1,53 +1,60 @@
 import matplotlib.pyplot as plt
 
-# Labels (nur für Legende!)
-labels = [
-    "Installation",
-    "Anlagenkomponenten",
-    "Zusätzliche Kosten"
-]
+labels = ["Installation", "Komponenten", "Zusätzliche Kosten"]
+colors = ["#28B4BC", "#DA5679", "#AFBAB9"]
 
-# KORREKTE Daten (ohne doppelte Zählung!)
-values_a = [1080*0.9, 1080*0.1, 470]
-values_wasser = [460*0.9, 460*0.1, 550]
-values_erd = [640*0.9, 640*0.1, 2130]
+data = {
+    "ASHP": [1080 * 0.9, 1080 * 0.1, 470],
+    "WSHP": [460 * 0.9, 460 * 0.1, 550],
+    "GSHP": [640 * 0.9, 640 * 0.1, 2130]
+}
 
-# Subplots
-fig, axs = plt.subplots(1, 3, figsize=(12, 4))
+def plot_combined(values, tech_name, filename):
+    fig, axes = plt.subplots(1, 2, figsize=(11, 5))
 
-# ASHP
-wedges1, _, _ = axs[0].pie(values_a, autopct='%1.1f%%', startangle=90)
-axs[0].set_title("ASHP")
+    # --- Kreisdiagramm ---
+    wedges, _, _ = axes[0].pie(
+        values,
+        autopct="%1.0f%%",
+        startangle=90,
+        colors=colors,
+        textprops={"fontsize": 18, "weight": "bold"}
+    )
+    axes[0].set_title(f"{tech_name}: CAPEX-Anteile", fontsize=14, weight="bold")
+    axes[0].axis("equal")
 
-# WSHP
-wedges2, _, _ = axs[1].pie(values_wasser, autopct='%1.1f%%', startangle=90)
-axs[1].set_title("WSHP")
+    # --- Balkendiagramm ---
+    bars = axes[1].bar(labels, values, color=colors)
+    axes[1].set_title(f"{tech_name}: Absolute Kosten", fontsize=14, weight="bold")
+    axes[1].set_ylabel("Kosten [€]")
+    axes[1].tick_params(axis="x", rotation=15)
 
-# GSHP
-wedges3, _, _ = axs[2].pie(values_erd, autopct='%1.1f%%', startangle=90)
-axs[2].set_title("GSHP")
+    # Werte über Balken schreiben
+    for bar in bars:
+        height = bar.get_height()
+        axes[1].text(
+            bar.get_x() + bar.get_width() / 2,
+            height + max(values) * 0.002,
+            f"{height:.0f} €",
+            ha="center",
+            va="bottom",
+            fontsize=12,
+            weight="bold"
+        )
 
-# Kreisform
-for ax in axs:
-    ax.axis('equal')
+    # gemeinsame Legende
+    fig.legend(
+        wedges,
+        labels,
+        loc="lower center",
+        ncol=3,
+        fontsize=11
+    )
 
-# 🔥 Gemeinsame Legende (nur einmal!)
-fig.legend(
-    wedges1,        # Farben übernehmen
-    labels,
-    loc="lower center",
-    ncol=3
-)
+    plt.tight_layout(rect=[0, 0.08, 1, 1])
+    plt.savefig(filename, dpi=300, bbox_inches="tight")
+    plt.show()
 
-plt.suptitle("Vergleich der Investitionskostenstruktur")
-for ax in axs:
-    ax.axis('equal')
-
-fig.legend(wedges1, labels, loc="lower center", ncol=3)
-
-plt.tight_layout()
-
-# 🔥 Export (wichtig!)
-plt.savefig("investitionskosten.svg", bbox_inches='tight')
-
-plt.show()
+# Für jede Technologie eine eigene Figur
+for tech, values in data.items():
+    plot_combined(values, tech, f"{tech}_combined.png")
